@@ -1,0 +1,199 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"></script>
+
+@using (Html.BeginForm())
+{
+<div class="text-center">
+
+    <label style="font-size: 20px;"><strong>AUTOS</strong></label>
+
+    <div style="margin: 9px 350px 10px 350px">
+        <div class="form-group">
+            @Html.DropDownList("marcas", null, htmlAttributes: new { @class = "form-control", @name = "marcas" })
+        </div>
+        <div class="form-group">
+            <select class="form-control" title="Marca" , name="submarca" id="submarca">
+            </select>
+        </div>
+        <div class="form-group">
+            <select class="form-control" title="Marca" name="modelos" id="modelos">
+            </select>
+        </div>
+        <div class="form-group">
+            <select class="form-control" title="Descripcion" name="descripcion" id="descripcion">
+                <option value="0">Selecciona una colonia</option>
+            </select>
+        </div>
+    </div>
+
+    <label style="font-size: 20px;"><strong>Domicilio</strong></label>
+
+    <div style="margin: 9px 350px 20px 350px">
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Codigo Postal" maxlength="5" name="CodigoPostal" id="CodigoPostal">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Estado" name="Estado" id="Estado" disabled>
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Municipio" name="Municipio" id="Municipio" disabled>
+        </div>
+        <div class="form-group">
+            <select class="form-control" title="Colonia" name="Colonia" id="Colonia">
+            </select>
+        </div>
+    </div>
+    <button class="btn btn-primary btn-lg" style="width: 100px;" onclick="EnviarDatos()" asp-controller="Cotizador" asp-action="Index" >Cotizar</button>
+
+</div>
+}
+<script type="text/javascript">
+
+    var cboMarcas = document.getElementById("marcas");
+    cboMarcas.addEventListener("change", Refresh);
+
+    Refresh();
+
+    function Refresh() {
+
+        fetch("@Url.Content("~/Home/ObtenerSubMarcas")" + "?idMarca=" + cboMarcas.value)
+            .then(function (result) {
+                if (result.ok) {
+                    return result.json();
+                }
+            })
+            .then(function (data) {
+                console.log(data);
+                dboSubMarca = document.getElementById("submarca");
+                dboSubMarca.innerHTML = "";
+
+                data.forEach(function (element) {
+
+                    let opt = document.createElement("option");
+                    opt.appendChild(document.createTextNode(element.nombre));
+                    opt.value = element.subMarcaId;
+                    dboSubMarca.appendChild(opt);
+                })
+            })
+    }
+
+</script>
+
+<script type="text/javascript">
+
+    var cboSubMarcas = document.getElementById("submarca");
+    cboSubMarcas.addEventListener("change", Refresh);
+
+    console.log("Este es el id de submarca" + cboSubMarcas.value);
+
+    Refresh();
+
+        function Refresh() {
+
+            fetch("@Url.Content("~/Home/ObtenerModelos")" + "?idSubMarca=" + cboSubMarcas.value)
+                .then(function (result) {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                })
+                .then(function (data) {
+                    console.log(data);
+                    dboModelos = document.getElementById("modelos");
+                    dboModelos.innerHTML = "";
+
+                    data.forEach(function (element) {
+
+                        let opt = document.createElement("option");
+                        opt.appendChild(document.createTextNode(element.anio));
+                        opt.value = element.modeloId;
+                        dboModelos.appendChild(opt);
+                    })
+                })
+    }
+
+</script>
+
+<script type="text/javascript">
+
+    var cbomodelo = document.getElementById("modelos");
+    var cboSubmarcaitem = document.getElementById("submarca");
+
+    cbomodelo.addEventListener("change", Refresh);
+
+    Refresh();
+
+    function Refresh() {
+        fetch("@Url.Content("~/Home/ObtenerDescripciones")" + "?idmodelo=" + cbomodelo.value + "&idsubmarca=" + cboSubmarcaitem.value)
+            .then(function (result) {
+                if (result.ok) {
+                    return result.json();
+                }
+            })
+            .then(function (data) {
+                console.log(data);
+
+                dboDescripcion = document.getElementById("descripcion");
+                dboDescripcion.innerHTML = "";
+
+                data.forEach(function (element) {
+
+                    let opt = document.createElement("option");
+                    opt.appendChild(document.createTextNode(element.descripcion));
+                    opt.value = element.descripcionId;
+                    dboDescripcion.appendChild(opt);
+                })
+            })
+    }
+
+</script>
+
+<script type="text/javascript">
+
+    var txtCodigo = document.getElementById("CodigoPostal");
+    txtCodigo.addEventListener("change", BuscarCodigo);
+
+    BuscarCodigo();
+
+    function BuscarCodigo() {
+        fetch("@Url.Content("~/Home/ConsultarCodigoPostal")" + "?codigopostal=" + txtCodigo.value)
+            .then(function (result) {
+                if (result.ok) {
+                    return result.json();
+                }
+            })
+            .then(function (data) {
+                console.log(data);
+
+                txtMunicipio = document.getElementById("Municipio");
+                txtEstado = document.getElementById("Estado");
+                dbocolonias = document.getElementById("Colonia");
+
+                txtMunicipio.innerHTML = "";
+                txtEstado.innerHTML = "";
+                dbocolonias.innerHTML = "";
+
+                data.forEach(function (element) {
+
+                    txtEstado.value = element.estado;
+                    txtMunicipio.value = element.municipio;
+
+                    element.colonias.forEach(function (element) {
+
+                        let opt = document.createElement("option");
+                        opt.appendChild(document.createTextNode(element.nombre));
+                        opt.value = element.idColonia;
+                        dbocolonias.appendChild(opt);
+                    })
+                })
+
+            })
+
+        ConsultarColonias();
+
+    }
+
+</script>
+
